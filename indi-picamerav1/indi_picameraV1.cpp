@@ -185,9 +185,9 @@ void PiCameraCCD::setupParams()
 ***************************************************************************************/
 void raspistill(const std::string cmd)
 {
+    int ret = 0;
     exp_done = true; // Hae? Wrong meaning of true and false! Could be fixed... but works!
-    if(system(cmd.c_str()) < 0)
-	    LOGF_INFO("Execution of external program failed! It was %s", cmd.c_str());
+    ret = system(cmd.c_str());
     exp_done = false;
 }
 
