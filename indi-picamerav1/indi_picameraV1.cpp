@@ -186,7 +186,7 @@ void PiCameraCCD::setupParams()
 void raspistill(const std::string cmd)
 {
     exp_done = true; // Hae? Wrong meaning of true and false! Could be fixed... but works!
-    system(cmd.c_str());
+    int ret = system(cmd.c_str());
     exp_done = false;
 }
 
@@ -347,17 +347,16 @@ void PiCameraCCD::grabImage()
     uint8_t *image = PrimaryCCD.getFrameBuffer();
 
     // Get width and height
+#ifdef RAPICAM_DEBUG
     int width  = PrimaryCCD.getSubW() / PrimaryCCD.getBinX() * PrimaryCCD.getBPP() / 8;
     int height = PrimaryCCD.getSubH() / PrimaryCCD.getBinY();
-#ifdef RAPICAM_DEBUG
     LOGF_INFO("Try grab image of format: %d x %d", width, height); 
 #endif
-	int i;
     FILE* f = fopen(IMG_FILE, "rb");
     unsigned char info[54];
 
     // read the 54-byte header
-    fread(info, sizeof(unsigned char), 54, f); 
+    size_t sizerd = fread(info, sizeof(unsigned char), 54, f); 
 
     // extract image height and width from header
     int bmpwidth = *(int*)&info[18];
@@ -370,7 +369,7 @@ void PiCameraCCD::grabImage()
     unsigned char* data = new unsigned char[size];
 
     // read the rest of the data at once
-    fread(data, sizeof(unsigned char), size, f); 
+    sizerd = fread(data, sizeof(unsigned char), size, f); 
     fclose(f);
     
     unsigned long resPtr = 0;
