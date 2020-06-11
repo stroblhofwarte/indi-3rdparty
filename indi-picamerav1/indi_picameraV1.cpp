@@ -187,7 +187,7 @@ void raspistill(const std::string cmd)
 {
     exp_done = true; // Hae? Wrong meaning of true and false! Could be fixed... but works!
     if(system(cmd.c_str()) < 0)
-	    LOGF_INFO("Execution of external program failed! It was ", cmd.c_str());
+	    LOGF_INFO("Execution of external program failed! It was %s", cmd.c_str());
     exp_done = false;
 }
 
