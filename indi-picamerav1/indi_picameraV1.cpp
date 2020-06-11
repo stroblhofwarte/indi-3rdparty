@@ -1,23 +1,6 @@
 /*
-   INDI Developers Manual
-   Tutorial #3
+   Based on the INDI Developers Manual Tutorial #3 "Simple CCD Driver"
 
-   "Simple CCD Driver"
-
-   We develop a simple CCD driver.
-
-   Refer to README, which contains instruction on how to build this driver, and use it
-   with an INDI-compatible client.
-
-*/
-
-/** \file simpleccd.cpp
-    \brief Construct a basic INDI CCD device that simulates exposure & temperature settings. It also generates a random pattern and uploads it as a FITS file.
-    \author Jasem Mutlaq
-
-    \example simpleccd.cpp
-    A simple CCD device that can capture images and control temperature. It returns a FITS image to the client. To build drivers for complex CCDs, please
-    refer to the INDI Generic CCD driver template in INDI SVN (under 3rdparty).
 */
 
 //#define RAPICAM_DEBUG 1
@@ -89,7 +72,7 @@ bool PiCameraCCD::Connect()
 #endif
     IDMessage(getDeviceName(), "PiCamera V1 connected successfully!");
 
-    // Let's set a timer that checks teleCCDs status every POLLMS milliseconds.
+    // Let's set a timer that checks CCDs status every POLLMS milliseconds.
     SetTimer(POLLMS);
     return true;
 }
@@ -128,7 +111,7 @@ bool PiCameraCCD::initProperties()
     // Must init parent properties first!
     INDI::CCD::initProperties();
 
-    // We set the CCD capabilities
+    // We set the CCD capabilities - NOTHING!
     uint32_t cap = 0; //CCD_CAN_ABORT;
     SetCCDCapability(cap);
 
@@ -188,7 +171,7 @@ void PiCameraCCD::setupParams()
 ***************************************************************************************/
 void raspistill(const std::string cmd)
 {
-	exp_done = true;
+    exp_done = true; // Hae? Wrong meaning of true and false! Could be fixed... but works!
     system(cmd.c_str());
     exp_done = false;
 }
@@ -203,7 +186,7 @@ bool PiCameraCCD::StartExposure(float duration)
     ExposureRequest = duration + 6.0; // The raspistill command need aprox. 6 seconds to download the image from the camera.
 
     int raspistillExpTime = (duration * 1000000) - 116; // raspistill need the time in µs. Max. exp. is 5999884.
-    // Since we have only have one CCD with one chip, we set the exposure duration of the primary CCD
+    // Since we have only one CCD with one chip, we set the exposure duration of the primary CCD
     PrimaryCCD.setExposureDuration(duration);
     gettimeofday(&ExpStart, nullptr);
 
@@ -382,22 +365,15 @@ void PiCameraCCD::grabImage()
     unsigned long idx = 0;
     for(idx = 0; idx < size; idx += 3)
     {
-		unsigned char b = data[idx];
-		unsigned char g = data[idx+1];
-		unsigned char r = data[idx+2];
-		// Put max. value of RGB to the gray scale image:
-		pixel = ((g*r*b)/255);
+	unsigned char b = data[idx];
+	unsigned char g = data[idx+1];
+	unsigned char r = data[idx+2];
+	// Put max. value of RGB to the gray scale image:
+	pixel = ((g*r*b)/255);
         image[resPtr++] = pixelPtr[0];
         image[resPtr++] = pixelPtr[1];
     }
     
-    // Fill buffer with random pattern
-    //for (int i = 0; i < height; i++)
-    //    for (int j = 0; j < width; j++)
-    //        image[i * width + j] = rand() % 255;
-
-	// Delete image from RAM
-	//remove(IMG_FILE);
     IDMessage(getDeviceName(), "Download complete.");
 
     // Let INDI::CCD know we're done filling the image buffer
