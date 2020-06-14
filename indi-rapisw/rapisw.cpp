@@ -116,6 +116,13 @@ bool RapiSW::initProperties()
     IUFillText(&Outlet2NameT[0], "Name", "", "");
     IUFillTextVector(&Outlet2NameTP, Outlet2NameT, 1, getDeviceName(), "OUTLET2_NAME", "Out2 Name", SITE_TAB, IP_RW, 0, IPS_IDLE);
 
+
+    IUFillNumber(&Outlet3N[0], "PWM", "pwm", "%g", 0, 100, 1, 0);
+    IUFillNumberVector(&Outlet3NP, Outlet3N, 1, getDeviceName(), "PWM_FREQ", "Outlet 3", MAIN_CONTROL_TAB, IP_RW, 0,
+                       IPS_IDLE);
+    
+    
+    
     return true;
 }
 
@@ -132,6 +139,7 @@ bool RapiSW::updateProperties()
     {
         defineSwitch(&Outlet1SP);
         defineSwitch(&Outlet2SP);
+        defineNumber(&Outlet3NP);
         defineText(&Outlet1NameTP);
         defineText(&Outlet2NameTP);
     }
@@ -142,6 +150,7 @@ bool RapiSW::updateProperties()
         deleteProperty(Outlet2SP.name);
         deleteProperty(Outlet1NameTP.name);
         deleteProperty(Outlet2NameTP.name);
+        deleteProperty(Outlet3NP.name);
     }
 
     return true;

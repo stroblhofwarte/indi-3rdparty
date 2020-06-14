@@ -54,5 +54,8 @@ class RapiSW : public INDI::DefaultDevice
     
     ITextVectorProperty Outlet2NameTP;
     IText Outlet2NameT[1] {};
+    
+    INumberVectorProperty Outlet3NP;
+    INumber Outlet3N[1];
         
 };
