@@ -23,7 +23,7 @@ include(CMakeCommon)
 
 ############# INDI PICAMERA ###############
 set(indirapisw_SRCS
-	${CMAKE_CURRENT_SOURCE_DIR}/indi_rapisw.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/rapisw.cpp
 )
 
 add_executable(indi_rapisw ${indirapisw_SRCS})

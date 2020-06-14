@@ -1,45 +1,51 @@
 /*
-   INDI Developers Manual
-   Tutorial #5 - Snooping
+ * RapiSW project.
+ *
+ * The startingpoint of this project was the INDI Developers Manual Tutorial #5, author Jasem Mutlaq.
+ * 
+ * This file is part of the RapiSW project.
+ * Copyright (c) 2020 Othmar Ehrhardt
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-   Rain Detector
-
-   Refer to README, which contains instruction on how to build this driver, and use it
-   with an INDI-compatible client.
 
 */
 
-/** \file raindetector.cpp
-    \brief Construct a rain detector device that the user may operate to raise a rain alert. This rain light property defined by this driver is \e snooped by the Dome driver
-           then takes whatever appropiate action to protect the dome.
-    \author Jasem Mutlaq
-*/
-
-#include "raindetector.h"
+#include "rapisw.h"
 
 #include <memory>
 #include <cstring>
 
-std::unique_ptr<RainDetector> rainDetector(new RainDetector());
+std::unique_ptr<RapiSW> rapiSW(new RapiSW());
 
 void ISGetProperties(const char *dev)
 {
-    rainDetector->ISGetProperties(dev);
+    rapiSW->ISGetProperties(dev);
 }
 
 void ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
 {
-    rainDetector->ISNewSwitch(dev, name, states, names, n);
+    rapiSW->ISNewSwitch(dev, name, states, names, n);
 }
 
 void ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
 {
-    rainDetector->ISNewText(dev, name, texts, names, n);
+    rapiSW->ISNewText(dev, name, texts, names, n);
 }
 
 void ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
 {
-    rainDetector->ISNewNumber(dev, name, values, names, n);
+    rapiSW->ISNewNumber(dev, name, values, names, n);
 }
 
 void ISNewBLOB(const char *dev, const char *name, int sizes[], int blobsizes[], char *blobs[], char *formats[],
@@ -57,50 +63,58 @@ void ISNewBLOB(const char *dev, const char *name, int sizes[], int blobsizes[], 
 
 void ISSnoopDevice(XMLEle *root)
 {
-    rainDetector->ISSnoopDevice(root);
+    rapiSW->ISSnoopDevice(root);
 }
 
 /**************************************************************************************
 ** Client is asking us to establish connection to the device
 ***************************************************************************************/
-bool RainDetector::Connect()
+bool RapiSW::Connect()
 {
-    IDMessage(getDeviceName(), "Rain Detector connected successfully!");
+    IDMessage(getDeviceName(), "RapiSW box connected successfully!");
     return true;
 }
 
 /**************************************************************************************
 ** Client is asking us to terminate connection to the device
 ***************************************************************************************/
-bool RainDetector::Disconnect()
+bool RapiSW::Disconnect()
 {
-    IDMessage(getDeviceName(), "Rain Detector disconnected successfully!");
+    IDMessage(getDeviceName(), "RapiSW box disconnected successfully!");
     return true;
 }
 
 /**************************************************************************************
 ** INDI is asking us for our default device name
 ***************************************************************************************/
-const char *RainDetector::getDefaultName()
+const char *RapiSW::getDefaultName()
 {
-    return "Rain Detector";
+    return "RapiSW box";
 }
 
 /**************************************************************************************
 ** INDI is asking us to init our properties.
 ***************************************************************************************/
-bool RainDetector::initProperties()
+bool RapiSW::initProperties()
 {
     // Must init parent properties first!
     INDI::DefaultDevice::initProperties();
 
-    IUFillLight(&RainL[0], "Status", "", IPS_IDLE);
-    IUFillLightVector(&RainLP, RainL, 1, getDeviceName(), "Rain Alert", "", MAIN_CONTROL_TAB, IPS_IDLE);
-
-    IUFillSwitch(&RainS[0], "On", "", ISS_OFF);
-    IUFillSwitch(&RainS[1], "Off", "", ISS_OFF);
-    IUFillSwitchVector(&RainSP, RainS, 2, getDeviceName(), "Control Rain", "", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0,
+    IUFillSwitch(&Outlet1S[0], "On", "", ISS_OFF);
+    IUFillSwitch(&Outlet1S[1], "Off", "", ISS_OFF);
+    IUFillSwitchVector(&Outlet1SP, Outlet1S, 2, getDeviceName(), "PWROUT_1", "Outlet 1", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0,
                        IPS_IDLE);
+                       
+    IUFillSwitch(&Outlet2S[0], "On", "", ISS_OFF);
+    IUFillSwitch(&Outlet2S[1], "Off", "", ISS_OFF);
+    IUFillSwitchVector(&Outlet2SP, Outlet2S, 2, getDeviceName(), "PWROUT_2", "Outlet 2", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0,
+                       IPS_IDLE);
+                       
+    IUFillText(&Outlet1NameT[0], "Name", "", "");
+    IUFillTextVector(&Outlet1NameTP, Outlet1NameT, 1, getDeviceName(), "OUTLET1_NAME", "Out1 Name", SITE_TAB, IP_RW, 0, IPS_IDLE);
+    
+    IUFillText(&Outlet2NameT[0], "Name", "", "");
+    IUFillTextVector(&Outlet2NameTP, Outlet2NameT, 1, getDeviceName(), "OUTLET2_NAME", "Out2 Name", SITE_TAB, IP_RW, 0, IPS_IDLE);
 
     return true;
 }
@@ -109,22 +123,36 @@ bool RainDetector::initProperties()
 ** INDI is asking us to update the properties because there is a change in CONNECTION status
 ** This fucntion is called whenever the device is connected or disconnected.
 *********************************************************************************************/
-bool RainDetector::updateProperties()
+bool RapiSW::updateProperties()
 {
     // Call parent update properties first
     INDI::DefaultDevice::updateProperties();
 
     if (isConnected())
     {
-        defineLight(&RainLP);
-        defineSwitch(&RainSP);
+        defineSwitch(&Outlet1SP);
+        defineSwitch(&Outlet2SP);
+        defineText(&Outlet1NameTP);
+        defineText(&Outlet2NameTP);
     }
     else
     // We're disconnected
     {
-        deleteProperty(RainLP.name);
-        deleteProperty(RainSP.name);
+        deleteProperty(Outlet1SP.name);
+        deleteProperty(Outlet2SP.name);
+        deleteProperty(Outlet1NameTP.name);
+        deleteProperty(Outlet2NameTP.name);
     }
+
+    return true;
+}
+
+bool RapiSW::saveConfigItems(FILE *fp)
+{
+    INDI::DefaultDevice::saveConfigItems(fp);
+
+    IUSaveConfigText(fp, &Outlet1NameTP);
+    IUSaveConfigText(fp, &Outlet2NameTP);
 
     return true;
 }
@@ -132,32 +160,85 @@ bool RainDetector::updateProperties()
 /********************************************************************************************
 ** Client is asking us to update a switch
 *********************************************************************************************/
-bool RainDetector::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
+bool RapiSW::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
 {
     if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
     {
-        if (strcmp(name, RainSP.name) == 0)
+        if (strcmp(name, Outlet1SP.name) == 0)
         {
-            IUUpdateSwitch(&RainSP, states, names, n);
+            strcpy(Outlet1SP.label,Outlet1NameT[0].text);
+            IUUpdateSwitch(&Outlet1SP, states, names, n);
 
-            if (RainS[0].s == ISS_ON)
+            if (Outlet1S[0].s == ISS_ON)
             {
-                RainL[0].s = IPS_ALERT;
-                RainLP.s   = IPS_ALERT;
-                IDSetLight(&RainLP, "Alert! Alert! Rain detected!");
+                // Here the Rapi GPIO on code
             }
             else
             {
-                RainL[0].s = IPS_IDLE;
-                RainLP.s   = IPS_OK;
-                IDSetLight(&RainLP, "Rain threat passed. The skies are clear.");
+                // Here the Rapi GPIO off code
             }
 
-            RainSP.s = IPS_OK;
-            IDSetSwitch(&RainSP, nullptr);
+            Outlet1SP.s = IPS_OK;
+            IDSetSwitch(&Outlet1SP, nullptr);
+            return true;
+        }
+        if (strcmp(name, Outlet2SP.name) == 0)
+        {
+            strcpy(Outlet2SP.label,Outlet2NameT[0].text);
+            IUUpdateSwitch(&Outlet2SP, states, names, n);
+
+            if (Outlet2S[0].s == ISS_ON)
+            {
+                // Here the Rapi GPIO on code
+            }
+            else
+            {
+                // Here the Rapi GPIO off code
+            }
+
+            Outlet2SP.s = IPS_OK;
+            IDSetSwitch(&Outlet2SP, nullptr);
             return true;
         }
     }
 
     return INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n);
+}
+
+bool RapiSW::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
+{
+    if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
+    {
+        if (!strcmp(name, Outlet1NameTP.name))
+        {
+            Outlet1NameTP.s = IPS_OK;
+            IText *tp    = IUFindText(&Outlet1NameTP, names[0]);
+            IUSaveText(tp, texts[0]);
+            IDSetText(&Outlet1NameTP, "Outlet1 name updated");
+            return true;
+        }
+        if (!strcmp(name, Outlet2NameTP.name))
+        {
+            Outlet2NameTP.s = IPS_OK;
+            IText *tp    = IUFindText(&Outlet2NameTP, names[0]);
+            IUSaveText(tp, texts[0]);
+            IDSetText(&Outlet2NameTP, "Outlet2 name updated");
+            return true;
+        }
+    }
+
+    return INDI::DefaultDevice::ISNewText(dev, name, texts, names, n);
+}
+
+void RapiSW::ISGetProperties(const char *dev)
+{
+    INDI::DefaultDevice::ISGetProperties(dev);
+    defineText(&Outlet1NameTP);
+    defineText(&Outlet2NameTP);
+    
+    loadConfig(true, "OUTLET1_NAME");
+    loadConfig(true, "OUTLET2_NAME");
+    strcpy(Outlet1SP.label,Outlet1NameT[0].text);
+    strcpy(Outlet2SP.label,Outlet2NameT[0].text);
+    
 }
