@@ -17,12 +17,12 @@ git clone https://github.com/stroblhofwarte/indi-3rdparty.git
 ```
 Create INDI build directory and change to it:
 ```
-mkdir -p build/indi-raspisw
-cd build/indi-raspisw
+mkdir -p build/indi-rapisw
+cd build/indi-rapisw
 ```
 Create the makefiles:
 ```
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release ~/_develop/indi-3rdparty/indi-raspisw
+cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release ~/_develop/indi-3rdparty/indi-rapisw
 ```
 Build the driver:
 ```
